@@ -56,10 +56,22 @@ public class FileService {
 		int lastPoint = file.getOriginalFilename().lastIndexOf(".");
 		String type = fileName.substring(lastPoint+1, fileName.length());
 		
-		List<Tag> tagList = Arrays.asList(tags).stream().map(tagName -> new Tag(tagName)).collect(Collectors.toList());
+		List<Tag> tagList = createTags(tags);
 		File fileData = new File(user, name, minIoPath, size, type);
 		fileData.setTags(tagList);
 		fileRepository.save(fileData);
+	}
+	
+	private List<Tag> createTags(String tags[]){
+		List<Tag> tagList = new ArrayList<Tag>();
+		for(String tagName : tags) {
+			Tag tag;
+			if((tag = tagRepository.findByName(tagName)) == null) {
+				tag = tagRepository.save(new Tag(tagName));
+			}
+			tagList.add(tag);
+		}
+		return tagList;
 	}
 	
 	public String downloadFile(String id) {
@@ -72,56 +84,39 @@ public class FileService {
 		if(user.isEmpty() && name.isEmpty() && tags.length == 0) {
 			files = Lists.newArrayList(fileRepository.findAll());
 		}else {
-		
-			if(!user.isEmpty() || !name.isEmpty()) {
-				files = fileRepository.findAllByUserLikeIgnoreCaseAndNameLikeIgnoreCase("%"+user+"%", "%"+name+"%");
-			}
-			
-			files.addAll(filterByTags(tags));
+			List<Tag> tagList = tagRepository.findAllByNameIn(tags);
+			Set<String> tagIds = tagList.stream().map(tag -> tag.getId()).collect(Collectors.toSet());
+			files = fileRepository.findAllByUserLikeIgnoreCaseAndNameLikeIgnoreCaseAndTagsIdIn("%"+user+"%", "%"+name+"%",tagIds);
 		}
 		
-		orderList(files);
-		Metadata metadata = packageMetadata(page, size, files);
+		files = files.stream().sorted(Comparator.comparing(File::getCreatedAt).reversed())
+				.collect(Collectors.toList());
 		
-		size *= page;
-		page = (page-1) * size;
-		if(size > files.size()) {
-			size = files.size();
+		int limit = size*page;
+		int offset = (page-1) * size;
+		int totalItems = files.size();
+		if(limit > totalItems) {
+			limit = totalItems;
 		}
 		Set<FileInfo> documents;
-		if(page > files.size()) {
+		if(offset > totalItems) {
 			documents = new LinkedHashSet<FileInfo>();
 		}else {
-			files = files.subList(page, size);
+			files = files.subList(offset, limit);
 			documents = model.setModels(files);
 		}
-		
-		metadata.setCurrentItems(documents.size());
+		Metadata metadata = packageMetadata(page, size, totalItems, documents.size());
 		
 		return new SearchResponse(metadata, documents);
 	}
 	
-	private List<File> filterByTags(String[] tags){
-		List<Tag> tagList = tagRepository.findAllByNameIn(tags);
-		Set<String> tagIds = tagList.stream().map(tag -> tag.getId()).collect(Collectors.toSet());
-		return fileRepository.findFilesByTagsIdIn(tagIds);
-	}
-	
-	private void orderList(List<File> files){
-		Set<File> notDuplicatedFiles = new HashSet<File>(files);
-		files.clear();
-		files.addAll(notDuplicatedFiles);
-		files = files.stream().sorted(Comparator.comparing(File::getCreatedAt).reversed())
-				.collect(Collectors.toList());
-	}
-	
-	private Metadata packageMetadata(int page, int size, List<File> files) {
+	private Metadata packageMetadata(int page, int size, int totalItems, int currentItems) {
 		Metadata metadata = new Metadata();
 		metadata.setCurrentPage(page);
 		metadata.setItemsPerPage(size);
-		metadata.setTotalItems(files.size());
-		int filesQuantity = files.size();
-		metadata.setTotalPages(filesQuantity%size == 0 ? filesQuantity/size : (filesQuantity/size)+1);
+		metadata.setTotalItems(totalItems);
+		metadata.setTotalPages(totalItems%size == 0 ? totalItems/size : (totalItems/size)+1);
+		metadata.setCurrentItems(currentItems);
 		return metadata;
 	}
 }

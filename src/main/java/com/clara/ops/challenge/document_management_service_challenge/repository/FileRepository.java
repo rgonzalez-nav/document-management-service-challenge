@@ -9,7 +9,5 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface FileRepository extends CrudRepository<File, String> {
 	
-	List<File> findAllByUserLikeIgnoreCaseAndNameLikeIgnoreCase(String user, String name);
-	
-	List<File> findFilesByTagsIdIn(Set<String> ids);
+	List<File> findAllByUserLikeIgnoreCaseAndNameLikeIgnoreCaseAndTagsIdIn(String user, String name, Set<String> ids);
 }

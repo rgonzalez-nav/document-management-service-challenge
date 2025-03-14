@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.hibernate.annotations.NaturalId;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,6 +20,7 @@ public class Tag {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private String id;
 	
+	@NaturalId
 	private String name;
 	
 	@ManyToMany(mappedBy = "tags")
