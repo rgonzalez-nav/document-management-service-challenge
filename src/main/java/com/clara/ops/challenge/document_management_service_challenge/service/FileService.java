@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,6 +21,7 @@ import com.clara.ops.challenge.document_management_service_challenge.model.FileM
 import com.clara.ops.challenge.document_management_service_challenge.repository.FileRepository;
 import com.clara.ops.challenge.document_management_service_challenge.repository.TagRepository;
 import com.clara.ops.challenge.document_management_service_challenge.storage.StorageService;
+import com.google.common.collect.Lists;
 
 @Service
 public class FileService {
@@ -64,14 +66,30 @@ public class FileService {
 	
 	public Set<FileInfo> searchFile(String user, String name, String[] tags, int page, int size) {
 		List<File> files = new ArrayList<File>();
-		if(!user.isEmpty() || !name.isEmpty()) {
-			files = fileRepository.findAllByUserLikeIgnoreCaseAndNameLikeIgnoreCase("%"+user+"%", "%"+name+"%");
+		
+		if(user.isEmpty() && name.isEmpty() && tags.length == 0) {
+			files = Lists.newArrayList(fileRepository.findAll());
+		}else {
+		
+			if(!user.isEmpty() || !name.isEmpty()) {
+				files = fileRepository.findAllByUserLikeIgnoreCaseAndNameLikeIgnoreCase("%"+user+"%", "%"+name+"%");
+			}
+			
+			List<Tag> tagList = tagRepository.findAllByNameIn(tags);
+			Set<String> tagIds = tagList.stream().map(tag -> tag.getId()).collect(Collectors.toSet());
+			files.addAll(fileRepository.findFilesByTagsIdIn(tagIds));
 		}
-		List<Tag> tagList = tagRepository.findAllByNameIn(tags);
-		Set<String> tagIds = tagList.stream().map(tag -> tag.getId()).collect(Collectors.toSet());
-		files.addAll(fileRepository.findFilesByTagsIdIn(tagIds));
 		files = files.stream().sorted(Comparator.comparing(File::getCreatedAt).reversed())
 				.collect(Collectors.toList());
+		size *= page;
+		page = (page-1) * size;
+		if(size > files.size()) {
+			size = files.size();
+		}
+		if(page > files.size()) {
+			return new LinkedHashSet<FileInfo>();
+		}
+		files = files.subList(page, size);
 		
 		return model.setModels(files);
 	}
