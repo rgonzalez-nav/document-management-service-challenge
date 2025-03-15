@@ -8,14 +8,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Scanner;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.clara.ops.challenge.document_management_service_challenge.exception.StorageException;
 
+import io.minio.BucketExistsArgs;
 import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.UploadObjectArgs;
 import io.minio.errors.ErrorResponseException;
@@ -31,17 +33,14 @@ public class MinioStorageService implements StorageService{
 	//With a set limit of 50mb I decided to read the files 
 	//in batches of 10mb
 	private static final int TEN_MEGABYTES = 10000000;
-	private static final String MINIO_SERVER_ADDRESS = "http://localhost:9000";
-	private static final String ACCESS_KEY = "2k1MiFtzVQDAGYsAcq2Y";
-	private static final String SECRET_KEY = "8dcRn0FhPG3KK4KRxtfQoRLQXdsR8ZHBGH7tiyJk";
 	private final MinioClient minioClient;
 	private static final String UPLOAD_ERROR_MESSAGE = "Error: error uploading file";
 	private static final String DOWNLOAD_LINK_ERROR = "Error: error retreiving url";
 	
-	public MinioStorageService() {
+	public MinioStorageService(Environment env) {
 		minioClient = MinioClient.builder()
-		.endpoint(MINIO_SERVER_ADDRESS)
-		.credentials(ACCESS_KEY, SECRET_KEY)
+		.endpoint(env.getProperty("minio.url"))
+		.credentials(env.getProperty("minio.accessKey"), env.getProperty("minio.secretKey"))
 		.build();
 	}
 	
@@ -61,6 +60,9 @@ public class MinioStorageService implements StorageService{
 		outputFile.close();
 		inputFile.close();
 		try {
+			if(!minioClient.bucketExists(BucketExistsArgs.builder().bucket(user).build())) {
+				minioClient.makeBucket(MakeBucketArgs.builder().bucket(user).build());
+			}
 			minioClient.uploadObject(
 					UploadObjectArgs.builder()
 					.bucket(user)
