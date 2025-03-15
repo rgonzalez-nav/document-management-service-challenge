@@ -1,62 +1,64 @@
 package com.clara.ops.challenge.document_management_service_challenge;
 
 public class Metadata {
-	private Integer currentPage;
-	private Integer itemsPerPage;
-	private Integer currentItems;
-	private Integer totalPages;
-	private Integer totalItems;
-	
-	public Metadata(Integer currentPage, Integer itemsPerPage, Integer currentItems, Integer totalPages,
-			Integer totalItems) {
-		this.currentPage = currentPage;
-		this.itemsPerPage = itemsPerPage;
-		this.currentItems = currentItems;
-		this.totalPages = totalPages;
-		this.totalItems = totalItems;
-	}
-	
-	public Metadata() {
-		
-	}
+  private Integer currentPage;
+  private Integer itemsPerPage;
+  private Integer currentItems;
+  private Integer totalPages;
+  private Integer totalItems;
 
-	public Integer getCurrentPage() {
-		return currentPage;
-	}
+  public Metadata(
+      Integer currentPage,
+      Integer itemsPerPage,
+      Integer currentItems,
+      Integer totalPages,
+      Integer totalItems) {
+    this.currentPage = currentPage;
+    this.itemsPerPage = itemsPerPage;
+    this.currentItems = currentItems;
+    this.totalPages = totalPages;
+    this.totalItems = totalItems;
+  }
 
-	public void setCurrentPage(Integer currentPage) {
-		this.currentPage = currentPage;
-	}
+  public Metadata() {}
 
-	public Integer getItemsPerPage() {
-		return itemsPerPage;
-	}
+  public Integer getCurrentPage() {
+    return currentPage;
+  }
 
-	public void setItemsPerPage(Integer itemsPerPage) {
-		this.itemsPerPage = itemsPerPage;
-	}
+  public void setCurrentPage(Integer currentPage) {
+    this.currentPage = currentPage;
+  }
 
-	public Integer getCurrentItems() {
-		return currentItems;
-	}
+  public Integer getItemsPerPage() {
+    return itemsPerPage;
+  }
 
-	public void setCurrentItems(Integer currentItems) {
-		this.currentItems = currentItems;
-	}
+  public void setItemsPerPage(Integer itemsPerPage) {
+    this.itemsPerPage = itemsPerPage;
+  }
 
-	public Integer getTotalPages() {
-		return totalPages;
-	}
+  public Integer getCurrentItems() {
+    return currentItems;
+  }
 
-	public void setTotalPages(Integer totalPages) {
-		this.totalPages = totalPages;
-	}
+  public void setCurrentItems(Integer currentItems) {
+    this.currentItems = currentItems;
+  }
 
-	public Integer getTotalItems() {
-		return totalItems;
-	}
+  public Integer getTotalPages() {
+    return totalPages;
+  }
 
-	public void setTotalItems(Integer totalItems) {
-		this.totalItems = totalItems;
-	}
+  public void setTotalPages(Integer totalPages) {
+    this.totalPages = totalPages;
+  }
+
+  public Integer getTotalItems() {
+    return totalItems;
+  }
+
+  public void setTotalItems(Integer totalItems) {
+    this.totalItems = totalItems;
+  }
 }

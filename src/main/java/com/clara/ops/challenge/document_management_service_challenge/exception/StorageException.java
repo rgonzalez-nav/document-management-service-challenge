@@ -1,11 +1,15 @@
 package com.clara.ops.challenge.document_management_service_challenge.exception;
 
-public class StorageException extends RuntimeException{
-	public StorageException(String message) {
-		super(message);
-	}
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-	public StorageException(String message, Throwable cause) {
-		super(message, cause);
-	}
+@ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Failure to save file")
+public class StorageException extends RuntimeException {
+  public StorageException(String message) {
+    super(message);
+  }
+
+  public StorageException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }
