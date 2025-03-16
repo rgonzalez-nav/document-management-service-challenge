@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,16 +34,16 @@ public class FileService {
 
   @Autowired private FileModel model;
 
-  public void uploadFile(String user, String name, String[] tags, MultipartFile file)
+  public File uploadFile(String user, String name, String[] tags, MultipartFile file)
       throws IOException {
-    storageService.store(user, name, file);
+    storageService.store(user.toLowerCase(), name, file);
     String url = storageService.load(user, name);
-    createFile(user, name, tags, file, url);
+    return createFile(user, name, tags, file, url);
   }
 
-  public void createFile(
+  private File createFile(
       String user, String name, String[] tags, MultipartFile file, String minIoPath) {
-    if (file.isEmpty()) {
+    if (file == null) {
       throw new StorageException("Error: File is empty");
     }
 
@@ -54,7 +55,8 @@ public class FileService {
     List<Tag> tagList = createTags(tags);
     File fileData = new File(user, name, minIoPath, size, type);
     fileData.setTags(tagList);
-    fileRepository.save(fileData);
+    File newFile = fileRepository.save(fileData);
+    return newFile;
   }
 
   private List<Tag> createTags(String tags[]) {
@@ -70,10 +72,13 @@ public class FileService {
   }
 
   public String downloadFile(String id) {
-    File fileData = fileRepository.findById(id).get();
-    if (fileData == null) {
+    File fileData = null;
+    try {
+      fileData = fileRepository.findById(id).get();
+    } catch (NoSuchElementException exception) {
       throw new StorageFileNotFoundException("File not found");
     }
+
     return fileData.getMinIOPath();
   }
 
